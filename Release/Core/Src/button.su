@@ -1,0 +1,2 @@
+../Core/Src/button.c:17:6:buttonInit	40	static
+../Core/Src/button.c:31:18:buttonStateUpdate	0	static
