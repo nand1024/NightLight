@@ -1,4 +1,0 @@
-C:/Users/2andn/STM32Cube/Repository/STM32Cube_FW_G0_V1.6.1/Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_ll_bus.h:1135:22:LL_IOP_GRP1_EnableClock	24	static
-C:/Users/2andn/STM32Cube/Repository/STM32Cube_FW_G0_V1.6.1/Drivers/STM32G0xx_HAL_Driver/Inc/stm32g0xx_ll_gpio.h:747:26:LL_GPIO_ReadInputPort	16	static
-../Core/Src/button.c:13:6:buttonInit	32	static
-../Core/Src/button.c:27:18:buttonProcess	24	static

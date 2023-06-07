@@ -5,25 +5,25 @@
  *      Author: oleg
  */
 #include <stdio.h>
-#include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <assert.h>
 #include <math.h>
 #include "main.h"
 #include "lightingModule.h"
 #include "ws2812b_driver.h"
 #include "uartDebug.h"
-
+#include "random.h"
 
 typedef struct {
-	double r;
-	double g;
-	double b;
+	int32_t r;
+	int32_t g;
+	int32_t b;
 } Color;
 
-char debugBuff[128];
 
-static void reversLeds(Color ledArray[], uint8_t size)
+
+static void reverseLeds(Color ledArray[], uint8_t size)
 {
 	Color buffer;
 
@@ -35,54 +35,75 @@ static void reversLeds(Color ledArray[], uint8_t size)
 }
 
 
-
-static void changeLightIntensive(Color pixels[], uint8_t size, uint8_t prewMaxLight, uint8_t nowMaxLight)
+//change of brightness light
+static void changeLightIntensive(Color pixels[], uint16_t prewMaxLight, uint16_t nowMaxLight, uint8_t size)
 {
-	double coeficient = (double)nowMaxLight / (double)prewMaxLight;
+	assert(prewMaxLight > 0);
+	assert(nowMaxLight > 0);
+
 	for (uint8_t i = 0; i < size; i++) {
-		pixels[i].r *= coeficient;
-		pixels[i].g *= coeficient;
-		pixels[i].b *= coeficient;
+		pixels[i].r = pixels[i].r * nowMaxLight / prewMaxLight;
+		pixels[i].g = pixels[i].g * nowMaxLight / prewMaxLight;
+		pixels[i].b = pixels[i].b * nowMaxLight / prewMaxLight;
 	}
 }
 
 
-
-enum {RED, YELLOW, GREEN, CYAN, BLUE, MAGENTA,  CLR_CNT};
-
-static void getPreDefColors(Led colors[CLR_CNT], uint8_t maxLight)
+//creating a sequence of gradation colors
+static void colorGradient(Color pixels[], Color fromColor, Color toColor, uint8_t stepDiv, uint8_t size)
 {
-	colors[RED].r = maxLight;         colors[RED].g = 0;               colors[RED].b = 0;
-	colors[YELLOW].r = maxLight / 2;  colors[YELLOW].g = maxLight / 2; colors[YELLOW].b = 0;
-	colors[GREEN].r = 0;              colors[GREEN].g = maxLight;      colors[GREEN].b = 0;
-	colors[CYAN].r = 0;               colors[CYAN].g = maxLight / 2;   colors[CYAN].b = maxLight / 2;
-	colors[BLUE].r = 0;               colors[BLUE].g = 0;              colors[BLUE].b = maxLight;
-	colors[MAGENTA].r = maxLight / 2; colors[MAGENTA].g = 0;           colors[MAGENTA].b = maxLight / 2;
+	assert(stepDiv > 0);
+
+	Color step;
+
+	step.r = (toColor.r - fromColor.r) / stepDiv;
+	step.g = (toColor.g - fromColor.g) / stepDiv;
+	step.b = (toColor.b - fromColor.b) / stepDiv;
+
+	for (uint8_t i = 0; i < size; i++) {
+		pixels[i] = fromColor;
+
+		fromColor.r += step.r;
+		fromColor.g += step.g;
+		fromColor.b += step.b;
+	}
+}
+
+
+static void getPreDefColors(Color colors[TYPE_COLOR_CNT - 1], uint16_t maxLight)
+{
+	colors[TYPE_COLOR_RED].r = maxLight;         colors[TYPE_COLOR_RED].g = 0;               colors[TYPE_COLOR_RED].b = 0;
+	colors[TYPE_COLOR_YELLOW].r = maxLight / 2;  colors[TYPE_COLOR_YELLOW].g = maxLight / 2; colors[TYPE_COLOR_YELLOW].b = 0;
+	colors[TYPE_COLOR_GREEN].r = 0;              colors[TYPE_COLOR_GREEN].g = maxLight;      colors[TYPE_COLOR_GREEN].b = 0;
+	colors[TYPE_COLOR_CYAN].r = 0;               colors[TYPE_COLOR_CYAN].g = maxLight / 2;   colors[TYPE_COLOR_CYAN].b = maxLight / 2;
+	colors[TYPE_COLOR_BLUE].r = 0;               colors[TYPE_COLOR_BLUE].g = 0;              colors[TYPE_COLOR_BLUE].b = maxLight;
+	colors[TYPE_COLOR_MAGENTA].r = maxLight / 2; colors[TYPE_COLOR_MAGENTA].g = 0;           colors[TYPE_COLOR_MAGENTA].b = maxLight / 2;
+	colors[TYPE_COLOR_NONE].r = 0;               colors[TYPE_COLOR_NONE].g = 0;              colors[TYPE_COLOR_NONE].b = 0;
 }
 
 
 
-static void flameBallFrame(Color pixel[], TypeFlameBall typeFlameBall, TypeColor typeColor[4], uint8_t size, uint8_t maxLight)
+static void flameBallFrame(Color pixel[], TypeFlameBall typeFlameBall, TypeColor typeColor[4], uint8_t size, uint16_t maxLight)
 {
-	Led colors[CLR_CNT];
-	Led selectColor[4];
+
+	assert(typeFlameBall < FLAME_BALL_CNT);
+
+	Color colors[TYPE_COLOR_CNT - 1];
+	Color selectColor[4];
+	Color endTailColor;
 	uint8_t numOfBalls;
 	uint8_t lenOfBalls;
 
 	getPreDefColors(colors, maxLight);
 
 	for (uint8_t i = 0; i < 4; i++) {
-		switch (typeColor[i])
-		{
-			case TYPE_COLOR_RED:     selectColor[i] = colors[RED]; break;
-			case TYPE_COLOR_YELLOW:  selectColor[i] = colors[YELLOW]; break;
-			case TYPE_COLOR_GREEN:   selectColor[i] = colors[GREEN]; break;
-			case TYPE_COLOR_CYAN:    selectColor[i] = colors[CYAN]; break;
-			case TYPE_COLOR_BLUE:    selectColor[i] = colors[BLUE]; break;
-			case TYPE_COLOR_MAGENTA: selectColor[i] = colors[MAGENTA]; break;
-			case TYPE_COLOR_RANDOM:  selectColor[i] = colors[rand() % CLR_CNT]; break;
-			default:
-				break;
+
+		assert(typeColor[i] < TYPE_COLOR_CNT);
+
+		if (typeColor[i] != TYPE_COLOR_RANDOM) {
+			selectColor[i] = colors[typeColor[i]];
+		} else {
+			selectColor[i] = colors[getRandom(TYPE_COLOR_CNT - 2)]; //-color random and  - color none
 		}
 	}
 
@@ -117,124 +138,131 @@ static void flameBallFrame(Color pixel[], TypeFlameBall typeFlameBall, TypeColor
 			break;
 	}
 
-	uint8_t indexColorBall = 0;
+	uint8_t index;
 
-	for (uint8_t i = 0; i < size; i++) {
-		if (i % (size / numOfBalls) == 0) {
-			uint8_t u;
-			for (u = 0; u < lenOfBalls; u++) {
-				pixel[i+u].r = selectColor[indexColorBall].r / lenOfBalls * (u+1);
-				pixel[i+u].g = selectColor[indexColorBall].g / lenOfBalls * (u+1);
-				pixel[i+u].b = selectColor[indexColorBall].b / lenOfBalls * (u+1);
-			}
-			i += u - 1;
-			indexColorBall++;
-		} else {
-			pixel[i].r = 0;
-			pixel[i].g = 0;
-			pixel[i].b = 0;
+	for (uint8_t i = 0; i < numOfBalls; i++) {
+
+		index = i * (size / numOfBalls);
+
+		endTailColor = selectColor[i];
+
+		changeLightIntensive(&endTailColor, maxLight, maxLight / 24, 1);
+		//create flame ball with tail
+		colorGradient(&pixel[index],
+					  endTailColor,
+					  selectColor[i],
+					  lenOfBalls,
+					  lenOfBalls);
+
+		//to fill empty pixels
+		for (uint8_t u = lenOfBalls; u < (size / numOfBalls); u++) {
+			pixel[index + u] = colors[TYPE_COLOR_NONE];
 		}
 	}
 }
 
 
 
-void rainbowFrame(Color pixel[], uint8_t size, uint8_t maxLight)
+void rainbowFrame(Color pixel[], uint8_t size, uint16_t maxLight)
 {
-	enum {NONE, RED, YELLOW, GREEN, CYAN, BLUE, MAGENTA, NONE2, COLOR_CNT};
-
-	Led colors[] = {
-		[NONE].r = 0,               [NONE].g = 0,              [NONE].b = 0,
-		[RED].r = maxLight,         [RED].g = 0,               [RED].b = 0,
-		[YELLOW].r = maxLight / 2,  [YELLOW].g = maxLight / 2, [YELLOW].b = 0,
-		[GREEN].r = 0,              [GREEN].g = maxLight,      [GREEN].b = 0,
-		[CYAN].r = 0,               [CYAN].g = maxLight / 2,   [CYAN].b = maxLight / 2,
-		[BLUE].r = 0,               [BLUE].g = 0,              [BLUE].b = maxLight,
-		[MAGENTA].r = maxLight / 2, [MAGENTA].g = 0,           [MAGENTA].b = maxLight / 2,
-		[NONE2].r = 0,   			[NONE2].g = 0,  		   [NONE2].b = 0,
-	};
-
-	for (uint8_t i = 0; i < size; i++) {
-		pixel[i].r = colors[i % COLOR_CNT].r;
-		pixel[i].g = colors[i % COLOR_CNT].g;
-		pixel[i].b = colors[i % COLOR_CNT].b;
-	}
-}
-
-
-
-void solidFrame(Color pixel[], TypeColor typeColor, uint8_t size, uint8_t maxLight)
-{
-
-	Led colors[CLR_CNT];
-	Led selectColor;
+	const uint8_t lenGrad = size / 3;
+	const uint8_t remainder = size % 3;
+	Color colors[TYPE_COLOR_CNT - 1];
+	uint8_t sizeOfSteps;
+	uint8_t lenOfFragments;
+	uint8_t index = 0;
 
 	getPreDefColors(colors, maxLight);
 
-	switch (typeColor)
-	{
-		case TYPE_COLOR_RED:     selectColor = colors[RED]; break;
-		case TYPE_COLOR_YELLOW:  selectColor = colors[YELLOW]; break;
-		case TYPE_COLOR_GREEN:   selectColor = colors[GREEN]; break;
-		case TYPE_COLOR_CYAN:    selectColor = colors[CYAN]; break;
-		case TYPE_COLOR_BLUE:    selectColor = colors[BLUE]; break;
-		case TYPE_COLOR_MAGENTA: selectColor = colors[MAGENTA]; break;
-		case TYPE_COLOR_RANDOM:  selectColor = colors[rand() % CLR_CNT]; break;
-		default:
-			break;
-	}
+	//calc len gradient and calc steps shades
+	lenOfFragments = remainder == 2 ? lenGrad + 1 : lenGrad;
+	sizeOfSteps = remainder == 2 ? lenGrad + 1 : lenGrad;
+	//create gradient colors from red to green
+	colorGradient(&pixel[index],
+				  colors[TYPE_COLOR_RED],
+				  colors[TYPE_COLOR_GREEN],
+				  sizeOfSteps,
+				  lenOfFragments);
 
-	for (uint8_t i = 0; i < size; i++) {
-		pixel[i].r = selectColor.r;
-		pixel[i].g = selectColor.g;
-		pixel[i].b = selectColor.b;
-	}
+	//calc len gradient and calc steps shades
+	index = remainder == 2 ? lenGrad : lenGrad - 1;
+	lenOfFragments = lenGrad * 2;
+	sizeOfSteps = lenGrad * 2;
+	//create gradient colors from green to blue
+	colorGradient(&pixel[index],
+				  colors[TYPE_COLOR_GREEN],
+				  colors[TYPE_COLOR_BLUE],
+				  sizeOfSteps,
+				  lenOfFragments);
+
+	//calc len gradient and calc steps shades
+	index = remainder == 2 ? lenGrad*2 : lenGrad*2 - 1;
+	lenOfFragments = remainder > 0 ? lenGrad*2 + 1 : lenGrad*2;
+	sizeOfSteps = remainder > 0 ? lenGrad*2 + 1 : lenGrad*2;
+	//create gradient colors from blue to red
+	colorGradient(&pixel[index],
+			      colors[TYPE_COLOR_BLUE],
+				  colors[TYPE_COLOR_RED],
+				  sizeOfSteps,
+				  lenOfFragments);
 }
 
 
 
-void waveFrame(Color pixel[], TypeColor typeColor[2], uint8_t size, uint8_t maxLight)
+void solidFrame(Color pixel[], TypeColor typeColor, uint8_t size, uint16_t maxLight)
 {
-	Led colors[CLR_CNT];
-	Led selectColor[2];
-	uint8_t halfSize = size / 2;
-	double coeficient;
+
+	Color colors[TYPE_COLOR_CNT - 1];
+	Color selectColor;
 
 	getPreDefColors(colors, maxLight);
 
-	for (uint8_t i = 0; i < 2; i++) {
-		switch (typeColor[i])
-		{
-			case TYPE_COLOR_RED:     selectColor[i] = colors[RED]; break;
-			case TYPE_COLOR_YELLOW:  selectColor[i] = colors[YELLOW]; break;
-			case TYPE_COLOR_GREEN:   selectColor[i] = colors[GREEN]; break;
-			case TYPE_COLOR_CYAN:    selectColor[i] = colors[CYAN]; break;
-			case TYPE_COLOR_BLUE:    selectColor[i] = colors[BLUE]; break;
-			case TYPE_COLOR_MAGENTA: selectColor[i] = colors[MAGENTA]; break;
-			case TYPE_COLOR_RANDOM:  selectColor[i] = colors[rand() % CLR_CNT]; break;
-			default:
-				break;
-		}
+	assert(typeColor < TYPE_COLOR_CNT);
+
+	if (typeColor != TYPE_COLOR_RANDOM) {
+		selectColor = colors[typeColor];
+	} else {
+		selectColor = colors[getRandom(TYPE_COLOR_CNT - 2)]; //-color random and  - color none
 	}
 
-	for (uint8_t i = 0; i < 2; i++) {
-		for (uint8_t x = 0; x < halfSize; x++) {
-			if (x < (halfSize / 2)) {
-				coeficient =  x + 1;
-			}else{
-				coeficient = (halfSize / 2) - (x - (halfSize / 2));
-			}
-			pixel[x + i * halfSize].r = selectColor[i].r / (halfSize / 2) * coeficient;
-			pixel[x + i * halfSize].g = selectColor[i].g / (halfSize / 2) * coeficient;
-			pixel[x + i * halfSize].b = selectColor[i].b / (halfSize / 2) * coeficient;
-		}
+	for (uint8_t i = 0; i < size; i++) {
+		pixel[i] = selectColor;
 	}
 }
 
 
 
-static void createFrame(Color pixel[], EffectSetting *effectSetting, uint8_t size, uint8_t maxLight)
+void waveFrame(Color pixel[], TypeColor typeColor, uint8_t size, uint16_t maxLight)
 {
+	Color colors[TYPE_COLOR_CNT - 1];
+	Color peekWaveColor;
+	Color downWaveColor;
+
+	getPreDefColors(colors, maxLight);
+
+	assert(typeColor < TYPE_COLOR_CNT);
+
+	if (typeColor != TYPE_COLOR_RANDOM) {
+		peekWaveColor = colors[typeColor];
+	} else {
+		peekWaveColor = colors[getRandom(TYPE_COLOR_CNT - 2)]; //-color random and  - color none
+	}
+
+	downWaveColor = peekWaveColor;
+
+	changeLightIntensive(&downWaveColor, maxLight, maxLight / 24, 1);
+	//create gradient colors from maximum light color to minimum light color
+	colorGradient(&pixel[0], peekWaveColor, downWaveColor, size/2, size/2);
+	//create gradient colors from minimum light color to maximum light color
+	colorGradient(&pixel[size/2], downWaveColor, peekWaveColor, size/2, size/2);
+}
+
+
+
+static void createFrame(Color pixel[], EffectSetting *effectSetting, uint8_t size, uint16_t maxLight)
+{
+	assert(effectSetting->typeFrame < TYPE_FRAME_CNT);
+
 	switch (effectSetting->typeFrame) {
 		case TYPE_FRAME_FLAME_BALL:
 			flameBallFrame(pixel, effectSetting->typeFlameBall, effectSetting->typeColor, size, maxLight);
@@ -249,7 +277,7 @@ static void createFrame(Color pixel[], EffectSetting *effectSetting, uint8_t siz
 			break;
 
 		case TYPE_FRAME_WAVE:
-			waveFrame(pixel, effectSetting->typeColor, size, maxLight);
+			waveFrame(pixel, effectSetting->typeColor[0], size, maxLight);
 			break;
 
 		default:
@@ -257,7 +285,7 @@ static void createFrame(Color pixel[], EffectSetting *effectSetting, uint8_t siz
 	}
 
 	if (effectSetting->typeMove == TYPE_MOVE_FRAME_FORWARD) {
-		reversLeds(pixel, size);
+		reverseLeds(pixel, size);
 	}
 }
 
@@ -266,6 +294,8 @@ static void createFrame(Color pixel[], EffectSetting *effectSetting, uint8_t siz
 static void moveFrame(Color pixels[], uint8_t size, TypeMove typeMove)
 {
 	Color buffer;
+
+	assert(typeMove < TYPE_MOVE_CNT);
 
 	switch (typeMove) {
 		case TYPE_MOVE_FRAME_FORWARD:
@@ -299,20 +329,25 @@ static void moveFrame(Color pixels[], uint8_t size, TypeMove typeMove)
 }
 
 
-
+//calc step for change frame from current frame to target frame
 static void calcStepFrame(Color colorNow[],
 						  Color colorTarget[],
 						  Color colorStep[],
 						  uint8_t maxSteps,
 						  uint8_t size)
 {
+	assert(maxSteps > 0);
+
 	Color diff;
 
 	for (uint8_t i = 0; i < size; i++) {
+
+		//calc different
 		diff.r = colorTarget[i].r - colorNow[i].r;
 		diff.g = colorTarget[i].g - colorNow[i].g;
 		diff.b = colorTarget[i].b - colorNow[i].b;
 
+		//calc step
 		colorStep[i].r = diff.r / maxSteps;
 		colorStep[i].g = diff.g / maxSteps;
 		colorStep[i].b = diff.b / maxSteps;
@@ -334,13 +369,22 @@ static void updateFrame(Color colorNow[], Color colorStep[], uint8_t size)
 
 static bool checkEqualFrames(Color A[], Color B[], uint8_t size)
 {
-	double errCalc = 0.025;
+	const uint8_t errCalc = 32;
 	Color different;
 
 	for (uint8_t i = 0; i < size; i++) {
-		different.r = fabs(A[i].r - B[i].r);
-		different.g = fabs(A[i].g - B[i].g);
-		different.b = fabs(A[i].b - B[i].b);
+
+		//calc different
+		different.r = A[i].r - B[i].r;
+		different.g = A[i].g - B[i].g;
+		different.b = A[i].b - B[i].b;
+
+		//convert to absolute number
+		different.r = different.r < 0 ? -different.r : different.r;
+		different.g = different.g < 0 ? -different.g : different.g;
+		different.b = different.b < 0 ? -different.b : different.b;
+
+		//check equal
 		if (different.r > errCalc ||
 			different.g > errCalc ||
 			different.b > errCalc) {
@@ -353,20 +397,19 @@ static bool checkEqualFrames(Color A[], Color B[], uint8_t size)
 
 
 
-void lightUpdate(EffectSetting *effectSetting, uint8_t light)
+void lightUpdate(EffectSetting *effectSetting, uint16_t light)
 {
 	static Color colorNow[LED_SIZE] = {0};
 	static Color colorTarget[LED_SIZE];
 	static Color colorStep[LED_SIZE];
-	static uint8_t maxLight = 0;
+	static uint16_t maxLight = 0;
 	static uint16_t timeEffect = 0;
-
+	const uint8_t steps = 32; //steps for change from current frame to target frame
 	Led led[LED_SIZE];
-	uint8_t steps = 32;
 
 	//check is change light intensive
 	if (maxLight != light && maxLight != 0) {
-		changeLightIntensive(colorTarget, LED_SIZE, maxLight, light);
+		changeLightIntensive(colorTarget, maxLight, light, LED_SIZE);
 		//changeLightIntensive(colorNow, LED_SIZE, maxLight, light);
 		calcStepFrame(colorNow, colorTarget, colorStep, steps, LED_SIZE);
 	}
@@ -392,9 +435,9 @@ void lightUpdate(EffectSetting *effectSetting, uint8_t light)
 	updateFrame(colorNow, colorStep, LED_SIZE);
 
 	for (uint8_t i = 0; i < LED_SIZE; i++) {
-		led[i].r = colorNow[i].r;
-		led[i].g = colorNow[i].g;
-		led[i].b = colorNow[i].b;
+		led[i].r = colorNow[i].r / RGB_SCALE_MULTIPLE;
+		led[i].g = colorNow[i].g / RGB_SCALE_MULTIPLE;
+		led[i].b = colorNow[i].b / RGB_SCALE_MULTIPLE;
 	}
 
 	//send data to ws28128 leds

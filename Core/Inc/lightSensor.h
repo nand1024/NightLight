@@ -8,6 +8,8 @@
 #ifndef LIGHT_SENSOR_H_
 #define LIGHT_SENSOR_H_
 
+
+
 uint16_t getLightValue(void);
 void lightSensorInit(void);
 void startLightMeasurment(void);

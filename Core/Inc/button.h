@@ -28,7 +28,7 @@ extern ButtonStruct buttonSwitch;
 
 
 
-void buttonInit(void);
+void buttonInit(ButtonStruct btn[], uint8_t size);
 ButtonClickState buttonStateUpdate(ButtonStruct *btn);
 
 #endif /* BUTTON_BUTTON_H_ */

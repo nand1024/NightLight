@@ -1,5 +1,0 @@
-../Core/Src/lightingModule.c:303:13:calcStepFrame.constprop	40	static
-../Core/Src/lightingModule.c:142:6:rainbowFrame	56	static
-../Core/Src/lightingModule.c:166:6:solidFrame	56	static
-../Core/Src/lightingModule.c:196:6:waveFrame	88	static
-../Core/Src/lightingModule.c:356:6:lightUpdate	128	static

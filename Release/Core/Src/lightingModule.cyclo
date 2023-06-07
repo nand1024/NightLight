@@ -1,5 +1,0 @@
-lightingModule.c:303:13:calcStepFrame.constprop	2
-lightingModule.c:142:6:rainbowFrame	2
-lightingModule.c:166:6:solidFrame	9
-lightingModule.c:196:6:waveFrame	12
-lightingModule.c:356:6:lightUpdate	37

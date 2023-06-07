@@ -8,12 +8,15 @@
 #include "lightEffects.h"
 
 
+
 EffectSetting effects[NUM_OF_EFFECTS] = {
 		[0].typeFrame = TYPE_FRAME_RAINBOW,
 		[0].typeMove = TYPE_MOVE_FRAME_FORWARD,
+		[0].timeLifeColorEffect = 0,
 
 		[1].typeFrame = TYPE_FRAME_RAINBOW,
 		[1].typeMove = TYPE_MOVE_FRAME_BACK,
+		[1].timeLifeColorEffect = 0,
 
 		[2].typeFrame = TYPE_FRAME_FLAME_BALL,
 		[2].typeMove = TYPE_MOVE_FRAME_FORWARD,
@@ -71,9 +74,8 @@ EffectSetting effects[NUM_OF_EFFECTS] = {
 
 		[8].typeFrame = TYPE_FRAME_WAVE,
 		[8].typeMove = TYPE_MOVE_FRAME_FORWARD,
-		[8].typeColor[0] = TYPE_COLOR_YELLOW,
-		[8].typeColor[1] = TYPE_COLOR_MAGENTA,
-		[8].timeLifeColorEffect = 0,
+		[8].typeColor[0] = TYPE_COLOR_RANDOM,
+		[8].timeLifeColorEffect = 10,
 
 		[9].typeFrame = TYPE_FRAME_SOLID,
 		[9].typeMove = TYPE_MOVE_STOP,

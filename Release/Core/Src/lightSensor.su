@@ -1,3 +1,0 @@
-../Core/Src/lightSensor.c:15:10:getLightValue	0	static
-../Core/Src/lightSensor.c:28:6:lightSensorInit	96	static
-../Core/Src/lightSensor.c:121:6:startLightMeasurment	12	static

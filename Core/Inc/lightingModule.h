@@ -10,7 +10,7 @@
 #include "main.h"
 #include "ws2812b_driver.h"
 
-
+#define RGB_SCALE_MULTIPLE    100
 
 typedef enum {
 	TYPE_FRAME_FLAME_BALL,
@@ -24,13 +24,13 @@ typedef enum {
 
 
 typedef enum {
-	TYPE_COLOR_NONE,
 	TYPE_COLOR_RED,
 	TYPE_COLOR_YELLOW,
 	TYPE_COLOR_GREEN,
 	TYPE_COLOR_CYAN,
 	TYPE_COLOR_BLUE,
 	TYPE_COLOR_MAGENTA,
+	TYPE_COLOR_NONE,
 	TYPE_COLOR_RANDOM,
 	TYPE_COLOR_CNT,
 }TypeColor;
@@ -45,7 +45,8 @@ typedef enum {
 	TYPE_MOVE_LIGHTING_FORWARD,
 	TYPE_MOVE_LIGHTING_BACK,
 	*/
-	TYPE_MOVE_STOP
+	TYPE_MOVE_STOP,
+	TYPE_MOVE_CNT
 }TypeMove;
 
 
@@ -62,7 +63,7 @@ typedef enum {
 
 
 typedef struct {
-	uint8_t isNewSet;
+	uint8_t isNewSet; //for flag in case if new effect set
 	TypeFrame typeFrame;
 	TypeMove  typeMove;
 	uint16_t timeLifeColorEffect; //if random color generate
@@ -75,6 +76,6 @@ typedef struct {
 
 
 
-void lightUpdate(EffectSetting *effectSetting, uint8_t light);
+void lightUpdate(EffectSetting *effectSetting, uint16_t light);
 
 #endif /* LIGHTINGMODULE_LIGHTINGMODULE_H_ */

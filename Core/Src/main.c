@@ -6,7 +6,6 @@
  *      Author: Oleg Dus
  */
 
-#include <stdlib.h>
 #include <stdio.h>
 #include "main.h"
 #include "lightSensor.h"
@@ -15,24 +14,25 @@
 #include "lightingModule.h"
 #include "button.h"
 #include "lightEffects.h"
+#include "random.h"
 
 void SystemClockConfig(void);
 
 
 
-static uint8_t setLightPower(uint16_t lightSensorValue) {
+static uint16_t setLightPower(uint16_t lightSensorValue) {
 	const uint16_t highLight = 400;
 	const uint16_t mediumLight = 300;
 	const uint16_t lowLight = 200;
 
-	if (lightSensorValue > highLight) {// high
-		return 80;
+	if (lightSensorValue > highLight) { // high
+		return 96 * RGB_SCALE_MULTIPLE;
 	} else if(lightSensorValue > mediumLight) {// medium
-		return 64;
+		return 80 * RGB_SCALE_MULTIPLE;
 	} else  if(lightSensorValue > lowLight){ // low
-		return 48;
+		return 64 * RGB_SCALE_MULTIPLE;
 	} else { // very low
-		return 32;
+		return 48 * RGB_SCALE_MULTIPLE;
 	}
 }
 
@@ -40,8 +40,14 @@ static uint8_t setLightPower(uint16_t lightSensorValue) {
 
 int main(void)
 {
-	uint8_t maxLight;
+	uint16_t maxLight;
 	uint8_t modes = 0;
+
+	ButtonStruct buttonSwitch = {
+		  .pin = LL_GPIO_PIN_4,
+		  .port = GPIOA,
+		  .pressTicks = 0
+	};
 
 	//initialization
 	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);
@@ -52,22 +58,22 @@ int main(void)
 	startLightMeasurment();
 	debugInit();
 	initLight();
-	buttonInit();
-	srand(getLightValue());
+	buttonInit(&buttonSwitch, 1);
+	initRandom(getLightValue());
 	effects[modes].isNewSet = 1;
 
 	while (1)
 	{
-		maxLight = setLightPower(getLightValue());
+		maxLight = setLightPower(getLightValue()); //get light from light sensor
 
-		if (buttonStateUpdate(&buttonSwitch) == BUTTON_SHORT_CLICK) {
-		  if(++modes >= NUM_OF_EFFECTS) modes = 0;
-		  effects[modes].isNewSet = 1;
+		if (buttonStateUpdate(&buttonSwitch) == BUTTON_SHORT_CLICK) { //get button state
+		  if(++modes >= NUM_OF_EFFECTS) modes = 0; //change to next mode color effect
+		  effects[modes].isNewSet = 1; // set flag new effect
 		}
 
-		lightUpdate(&effects[modes], maxLight);
+		lightUpdate(&effects[modes], maxLight); //update lighting effect
 		LL_mDelay(1);
-		startLightMeasurment();
+		startLightMeasurment(); //start light sensor measurement
 		LL_mDelay(4);
 	}
 }

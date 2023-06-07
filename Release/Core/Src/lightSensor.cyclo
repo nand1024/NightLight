@@ -1,3 +1,0 @@
-lightSensor.c:15:10:getLightValue	2
-lightSensor.c:28:6:lightSensorInit	2
-lightSensor.c:121:6:startLightMeasurment	1

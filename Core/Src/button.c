@@ -8,22 +8,20 @@
 #include "main.h"
 #include "button.h"
 
-ButtonStruct buttonSwitch = {
-	  .pin = LL_GPIO_PIN_4,
-	  .port = GPIOA,
-	  .pressTicks = 0
-};
-
-void buttonInit(void)
+void buttonInit(ButtonStruct btn[], uint8_t size)
 {
-  LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
-
-  LL_IOP_GRP1_EnableClock(LL_IOP_GRP1_PERIPH_GPIOA);
-
-  GPIO_InitStruct.Pin = LL_GPIO_PIN_4;
-  GPIO_InitStruct.Mode = LL_GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
-  LL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+	for (uint8_t i = 0; i < size; i++) {
+		LL_GPIO_InitTypeDef GPIO_InitStruct = {0};
+		if (btn[i].port == GPIOA) {
+			LL_IOP_GRP1_EnableClock(LL_IOP_GRP1_PERIPH_GPIOA);
+		} else if (btn[i].port == GPIOB) {
+			LL_IOP_GRP1_EnableClock(LL_IOP_GRP1_PERIPH_GPIOB);
+		}
+		GPIO_InitStruct.Pin = btn[i].pin;
+		GPIO_InitStruct.Mode = LL_GPIO_MODE_INPUT;
+		GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
+		LL_GPIO_Init(btn[i].port, &GPIO_InitStruct);
+	}
 }
 
 

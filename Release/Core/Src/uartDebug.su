@@ -1,2 +1,0 @@
-../Core/Src/uartDebug.c:9:6:debugTx	8	static
-../Core/Src/uartDebug.c:17:6:debugInit	80	static
