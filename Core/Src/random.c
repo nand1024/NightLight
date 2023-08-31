@@ -12,7 +12,7 @@ static uint32_t randSequence = 5831;
 
 void initRandom(uint32_t initVal)
 {
-	randSequence = initVal;
+    randSequence = initVal;
 }
 
 

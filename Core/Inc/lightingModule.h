@@ -13,65 +13,65 @@
 #define RGB_SCALE_MULTIPLE    100
 
 typedef enum {
-	TYPE_FRAME_FLAME_BALL,
-	TYPE_FRAME_RAINBOW,
-	TYPE_FRAME_SOLID,
-	TYPE_FRAME_WAVE,
-	//TYPE_FRAME_SEQUENCE, //ToDo
-	TYPE_FRAME_CNT
+    TYPE_FRAME_FLAME_BALL,
+    TYPE_FRAME_RAINBOW,
+    TYPE_FRAME_SOLID,
+    TYPE_FRAME_WAVE,
+    //TYPE_FRAME_SEQUENCE, //ToDo
+    TYPE_FRAME_CNT
 }TypeFrame;
 
 
 
 typedef enum {
-	TYPE_COLOR_RED,
-	TYPE_COLOR_YELLOW,
-	TYPE_COLOR_GREEN,
-	TYPE_COLOR_CYAN,
-	TYPE_COLOR_BLUE,
-	TYPE_COLOR_MAGENTA,
-	TYPE_COLOR_NONE,
-	TYPE_COLOR_RANDOM,
-	TYPE_COLOR_CNT,
+    TYPE_COLOR_RED,
+    TYPE_COLOR_YELLOW,
+    TYPE_COLOR_GREEN,
+    TYPE_COLOR_CYAN,
+    TYPE_COLOR_BLUE,
+    TYPE_COLOR_MAGENTA,
+    TYPE_COLOR_NONE,
+    TYPE_COLOR_RANDOM,
+    TYPE_COLOR_CNT,
 }TypeColor;
 
 
 
 typedef enum {
-	TYPE_MOVE_FRAME_FORWARD,
-	TYPE_MOVE_FRAME_BACK,
-	/*
-	 *... in progress ...
-	TYPE_MOVE_LIGHTING_FORWARD,
-	TYPE_MOVE_LIGHTING_BACK,
-	*/
-	TYPE_MOVE_STOP,
-	TYPE_MOVE_CNT
+    TYPE_MOVE_FRAME_FORWARD,
+    TYPE_MOVE_FRAME_BACK,
+    /*
+     *... in progress ...
+    TYPE_MOVE_LIGHTING_FORWARD,
+    TYPE_MOVE_LIGHTING_BACK,
+    */
+    TYPE_MOVE_STOP,
+    TYPE_MOVE_CNT
 }TypeMove;
 
 
 
 typedef enum {
-	FLAME_BALL_1_FULL,
-	FLAME_BALL_1_DIV2LEN,
-	FLAME_BALL_2_DIV2LEN,
-	FLAME_BALL_2_DIV4LEN,
-	FLAME_BALL_4_DIV4LEN,
-	FLAME_BALL_CNT,
+    FLAME_BALL_1_FULL,
+    FLAME_BALL_1_DIV2LEN,
+    FLAME_BALL_2_DIV2LEN,
+    FLAME_BALL_2_DIV4LEN,
+    FLAME_BALL_4_DIV4LEN,
+    FLAME_BALL_CNT,
 } TypeFlameBall;
 
 
 
 typedef struct {
-	uint8_t isNewSet; //for flag in case if new effect set
-	TypeFrame typeFrame;
-	TypeMove  typeMove;
-	uint16_t timeLifeColorEffect; //if random color generate
-	TypeColor typeColor[4]; //LED_SIZE in future
-	union{
-		TypeFlameBall typeFlameBall;
-		//... in progress
-	};
+    uint8_t isNewSet; //for flag in case if new effect set
+    TypeFrame typeFrame;
+    TypeMove  typeMove;
+    uint16_t timeLifeColorEffect; //if random color generate
+    TypeColor typeColor[4]; //LED_SIZE in future
+    union{
+        TypeFlameBall typeFlameBall;
+        //... in progress
+    };
 }EffectSetting;
 
 

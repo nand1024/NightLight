@@ -9,17 +9,17 @@
 #define BUTTON_H_
 
 typedef enum{
-	BUTTON_SHORT_CLICK,
-	BUTTON_LONG_CLICK,
-	BUTTON_NO_CLICK,
+    BUTTON_SHORT_CLICK,
+    BUTTON_LONG_CLICK,
+    BUTTON_NO_CLICK,
 } ButtonClickState;
 
 
 
 typedef struct {
-	uint16_t pressTicks;
-	GPIO_TypeDef *port;
-	uint16_t pin;
+    uint16_t pressTicks;
+    GPIO_TypeDef *port;
+    uint16_t pin;
 }ButtonStruct;
 
 

@@ -21,61 +21,61 @@ void SystemClockConfig(void);
 
 
 static uint16_t setLightPower(uint16_t lightSensorValue) {
-	const uint16_t highLight = 400;
-	const uint16_t mediumLight = 300;
-	const uint16_t lowLight = 200;
+    const uint16_t highLight = 400;
+    const uint16_t mediumLight = 300;
+    const uint16_t lowLight = 200;
 
-	if (lightSensorValue > highLight) { // high
-		return 96 * RGB_SCALE_MULTIPLE;
-	} else if(lightSensorValue > mediumLight) {// medium
-		return 80 * RGB_SCALE_MULTIPLE;
-	} else  if(lightSensorValue > lowLight){ // low
-		return 64 * RGB_SCALE_MULTIPLE;
-	} else { // very low
-		return 48 * RGB_SCALE_MULTIPLE;
-	}
+    if (lightSensorValue > highLight) { // high
+        return 96 * RGB_SCALE_MULTIPLE;
+    } else if(lightSensorValue > mediumLight) {// medium
+        return 80 * RGB_SCALE_MULTIPLE;
+    } else  if(lightSensorValue > lowLight){ // low
+        return 64 * RGB_SCALE_MULTIPLE;
+    } else { // very low
+        return 48 * RGB_SCALE_MULTIPLE;
+    }
 }
 
 
 
 int main(void)
 {
-	uint16_t maxLight;
-	uint8_t modes = 0;
+    uint16_t maxLight;
+    uint8_t modes = 0;
 
-	ButtonStruct buttonSwitch = {
-		  .pin = LL_GPIO_PIN_4,
-		  .port = GPIOA,
-		  .pressTicks = 0
-	};
+    ButtonStruct buttonSwitch = {
+          .pin = LL_GPIO_PIN_4,
+          .port = GPIOA,
+          .pressTicks = 0
+    };
 
-	//initialization
-	LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);
-	LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_PWR);
-	NVIC_SetPriority(SysTick_IRQn, 3);
-	SystemClockConfig();
-	lightSensorInit();
-	startLightMeasurment();
-	debugInit();
-	initLight();
-	buttonInit(&buttonSwitch, 1);
-	initRandom(getLightValue());
-	effects[modes].isNewSet = 1;
+    //initialization
+    LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_SYSCFG);
+    LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_PWR);
+    NVIC_SetPriority(SysTick_IRQn, 3);
+    SystemClockConfig();
+    lightSensorInit();
+    startLightMeasurment();
+    debugInit();
+    initLight();
+    buttonInit(&buttonSwitch, 1);
+    initRandom(getLightValue());
+    effects[modes].isNewSet = 1;
 
-	while (1)
-	{
-		maxLight = setLightPower(getLightValue()); //get light from light sensor
+    while (1)
+    {
+        maxLight = setLightPower(getLightValue()); //get light from light sensor
 
-		if (buttonStateUpdate(&buttonSwitch) == BUTTON_SHORT_CLICK) { //get button state
-		  if(++modes >= NUM_OF_EFFECTS) modes = 0; //change to next mode color effect
-		  effects[modes].isNewSet = 1; // set flag new effect
-		}
+        if (buttonStateUpdate(&buttonSwitch) == BUTTON_SHORT_CLICK) { //get button state
+          if(++modes >= NUM_OF_EFFECTS) modes = 0; //change to next mode color effect
+          effects[modes].isNewSet = 1; // set flag new effect
+        }
 
-		lightUpdate(&effects[modes], maxLight); //update lighting effect
-		LL_mDelay(1);
-		startLightMeasurment(); //start light sensor measurement
-		LL_mDelay(4);
-	}
+        lightUpdate(&effects[modes], maxLight); //update lighting effect
+        LL_mDelay(1);
+        startLightMeasurment(); //start light sensor measurement
+        LL_mDelay(4);
+    }
 }
 
 
