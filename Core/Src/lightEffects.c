@@ -2,7 +2,7 @@
  * lightEffects.c
  *
  *  Created on: 29 трав. 2023 р.
- *      Author: 2andn
+ *      Author: Oleg Dus
  */
 
 #include "lightEffects.h"

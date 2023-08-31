@@ -22,7 +22,7 @@ typedef struct {
 } Color;
 
 
-
+//reverse order of LEDs
 static void reverseLeds(Color ledArray[], uint8_t size)
 {
 	Color buffer;
@@ -62,7 +62,6 @@ static void colorGradient(Color pixels[], Color fromColor, Color toColor, uint8_
 
 	for (uint8_t i = 0; i < size; i++) {
 		pixels[i] = fromColor;
-
 		fromColor.r += step.r;
 		fromColor.g += step.g;
 		fromColor.b += step.b;
@@ -82,7 +81,7 @@ static void getPreDefColors(Color colors[TYPE_COLOR_CNT - 1], uint16_t maxLight)
 }
 
 
-
+//generate frame of color effect "Flame ball"
 static void flameBallFrame(Color pixel[], TypeFlameBall typeFlameBall, TypeColor typeColor[4], uint8_t size, uint16_t maxLight)
 {
 
@@ -162,7 +161,7 @@ static void flameBallFrame(Color pixel[], TypeFlameBall typeFlameBall, TypeColor
 }
 
 
-
+//generate frame of color effect "Rainbow"
 void rainbowFrame(Color pixel[], uint8_t size, uint16_t maxLight)
 {
 	const uint8_t lenGrad = size / 3;
@@ -208,7 +207,7 @@ void rainbowFrame(Color pixel[], uint8_t size, uint16_t maxLight)
 }
 
 
-
+//generate frame of color effect "Solid"
 void solidFrame(Color pixel[], TypeColor typeColor, uint8_t size, uint16_t maxLight)
 {
 
@@ -231,7 +230,7 @@ void solidFrame(Color pixel[], TypeColor typeColor, uint8_t size, uint16_t maxLi
 }
 
 
-
+//generate frame of color effect "Wave"
 void waveFrame(Color pixel[], TypeColor typeColor, uint8_t size, uint16_t maxLight)
 {
 	Color colors[TYPE_COLOR_CNT - 1];
@@ -258,7 +257,7 @@ void waveFrame(Color pixel[], TypeColor typeColor, uint8_t size, uint16_t maxLig
 }
 
 
-
+//create chosed frame of lighting effect
 static void createFrame(Color pixel[], EffectSetting *effectSetting, uint8_t size, uint16_t maxLight)
 {
 	assert(effectSetting->typeFrame < TYPE_FRAME_CNT);
@@ -315,6 +314,7 @@ static void moveFrame(Color pixels[], uint8_t size, TypeMove typeMove)
 			break;
 
 /*
+ * ToDo
 		case TYPE_MOVE_LIGHTING_FORWARD:
 			//in progress
 			break;
@@ -396,7 +396,7 @@ static bool checkEqualFrames(Color A[], Color B[], uint8_t size)
 }
 
 
-
+//this function must be called one per ~5ms for update lighting effect
 void lightUpdate(EffectSetting *effectSetting, uint16_t light)
 {
 	static Color colorNow[LED_SIZE] = {0};

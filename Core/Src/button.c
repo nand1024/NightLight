@@ -25,7 +25,7 @@ void buttonInit(ButtonStruct btn[], uint8_t size)
 }
 
 
-
+//check and update state of button
 ButtonClickState buttonStateUpdate(ButtonStruct *btn)
 {
 	const uint16_t tickShortClick = 10;
